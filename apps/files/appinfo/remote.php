@@ -40,7 +40,7 @@ $defaults = new OC_Defaults();
 $server->addPlugin(new \Sabre\DAV\Auth\Plugin($authBackend, $defaults->getName()));
 $server->addPlugin(new \Sabre\DAV\Locks\Plugin($lockBackend));
 $server->addPlugin(new \Sabre\DAV\Browser\Plugin(false, false)); // Show something in the Browser, but no upload
-$server->addPlugin(new OC_Connector_Sabre_FilesPlugin());
+$server->addPlugin(new \OC\Connector\Sabre\FilesPlugin());
 $server->addPlugin(new OC_Connector_Sabre_MaintenancePlugin());
 $server->addPlugin(new OC_Connector_Sabre_ExceptionLoggerPlugin('webdav'));
 
@@ -55,7 +55,7 @@ $server->on('beforeMethod', function () use ($server, $objectTree) {
 	$objectTree->init($rootDir, $view, $mountManager);
 
 	$server->addPlugin(new \OC\Connector\Sabre\TagsPlugin($objectTree, \OC::$server->getTagManager()));
-	$server->addPlugin(new OC_Connector_Sabre_QuotaPlugin($view));
+	$server->addPlugin(new \OC\Connector\Sabre\QuotaPlugin($view));
 }, 30); // priority 30: after auth (10) and acl(20), before lock(50) and handling the request
 
 // And off we go!

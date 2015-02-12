@@ -237,7 +237,7 @@ class Webdav extends TestCase {
 		$server->addPlugin(new \Sabre\DAV\Auth\Plugin($authBackend, 'ownCloud'));
 		$server->addPlugin(new \Sabre\DAV\Locks\Plugin($lockBackend));
 		$server->addPlugin(new \Sabre\DAV\Browser\Plugin(false)); // Show something in the Browser, but no upload
-		$server->addPlugin(new \OC_Connector_Sabre_QuotaPlugin($view));
+		$server->addPlugin(new \OC\Connector\Sabre\QuotaPlugin($view));
 		$server->addPlugin(new \OC_Connector_Sabre_MaintenancePlugin());
 		$server->debugExceptions = true;
 

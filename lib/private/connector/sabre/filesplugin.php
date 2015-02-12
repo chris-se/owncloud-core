@@ -1,4 +1,5 @@
 <?php
+namespace OC\Connector\Sabre;
 
 /**
  * ownCloud
@@ -9,7 +10,7 @@
  * @license AGPL3
  */
 
-class \OC\Connector\Sabre\FilesPlugin extends \Sabre\DAV\ServerPlugin
+class FilesPlugin extends \Sabre\DAV\ServerPlugin
 {
 
 	// namespace
@@ -107,7 +108,7 @@ class \OC\Connector\Sabre\FilesPlugin extends \Sabre\DAV\ServerPlugin
 		// chunked upload handling
 		if (isset($_SERVER['HTTP_OC_CHUNKED'])) {
 			list($path, $name) = \Sabre\HTTP\URLUtil::splitPath($filePath);
-			$info = OC_FileChunking::decodeName($name);
+			$info = \OC_FileChunking::decodeName($name);
 			if (!empty($info)) {
 				$filePath = $path . '/' . $info['name'];
 			}
