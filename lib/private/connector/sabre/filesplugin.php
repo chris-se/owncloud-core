@@ -9,7 +9,7 @@
  * @license AGPL3
  */
 
-class OC_Connector_Sabre_FilesPlugin extends \Sabre\DAV\ServerPlugin
+class \OC\Connector\Sabre\FilesPlugin extends \Sabre\DAV\ServerPlugin
 {
 
 	// namespace
@@ -58,7 +58,7 @@ class OC_Connector_Sabre_FilesPlugin extends \Sabre\DAV\ServerPlugin
 	 */
 	public function beforeGetProperties($path, \Sabre\DAV\INode $node, array &$requestedProperties, array &$returnedProperties) {
 
-		if ($node instanceof OC_Connector_Sabre_Node) {
+		if ($node instanceof \OC\Connector\Sabre\Node) {
 
 			$fileIdPropertyName = '{' . self::NS_OWNCLOUD . '}id';
 			$permissionsPropertyName = '{' . self::NS_OWNCLOUD . '}permissions';
@@ -69,7 +69,7 @@ class OC_Connector_Sabre_FilesPlugin extends \Sabre\DAV\ServerPlugin
 				unset($requestedProperties[array_search($permissionsPropertyName, $requestedProperties)]);
 			}
 
-			/** @var $node OC_Connector_Sabre_Node */
+			/** @var $node \OC\Connector\Sabre\Node */
 			$fileId = $node->getFileId();
 			if (!is_null($fileId)) {
 				$returnedProperties[200][$fileIdPropertyName] = $fileId;
@@ -81,8 +81,8 @@ class OC_Connector_Sabre_FilesPlugin extends \Sabre\DAV\ServerPlugin
 			}
 		}
 
-		if ($node instanceof OC_Connector_Sabre_File) {
-			/** @var $node OC_Connector_Sabre_File */
+		if ($node instanceof \OC\Connector\Sabre\File) {
+			/** @var $node \OC\Connector\Sabre\File */
 			$directDownloadUrl = $node->getDirectDownload();
 			if (isset($directDownloadUrl['url'])) {
 				$directDownloadUrlPropertyName = '{' . self::NS_OWNCLOUD . '}downloadURL';
@@ -90,10 +90,10 @@ class OC_Connector_Sabre_FilesPlugin extends \Sabre\DAV\ServerPlugin
 			}
 		}
 
-		if ($node instanceof OC_Connector_Sabre_Directory) {
+		if ($node instanceof \OC\Connector\Sabre\Directory) {
 			$sizePropertyName = '{' . self::NS_OWNCLOUD . '}size';
 
-			/** @var $node OC_Connector_Sabre_Directory */
+			/** @var $node \OC\Connector\Sabre\Directory */
 			$returnedProperties[200][$sizePropertyName] = $node->getSize();
 		}
 	}
@@ -106,7 +106,7 @@ class OC_Connector_Sabre_FilesPlugin extends \Sabre\DAV\ServerPlugin
 	public function sendFileIdHeader($filePath, \Sabre\DAV\INode $node = null) {
 		// chunked upload handling
 		if (isset($_SERVER['HTTP_OC_CHUNKED'])) {
-			list($path, $name) = \Sabre\DAV\URLUtil::splitPath($filePath);
+			list($path, $name) = \Sabre\HTTP\URLUtil::splitPath($filePath);
 			$info = OC_FileChunking::decodeName($name);
 			if (!empty($info)) {
 				$filePath = $path . '/' . $info['name'];
@@ -118,7 +118,7 @@ class OC_Connector_Sabre_FilesPlugin extends \Sabre\DAV\ServerPlugin
 			return;
 		}
 		$node = $this->server->tree->getNodeForPath($filePath);
-		if ($node instanceof OC_Connector_Sabre_Node) {
+		if ($node instanceof \OC\Connector\Sabre\Node) {
 			$fileId = $node->getFileId();
 			if (!is_null($fileId)) {
 				$this->server->httpResponse->setHeader('OC-FileId', $fileId);

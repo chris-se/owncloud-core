@@ -1,4 +1,5 @@
 <?php
+namespace OC\Connector\Sabre;
 
 /**
  * ownCloud
@@ -21,7 +22,7 @@
  *
  */
 
-class OC_Connector_Sabre_File extends OC_Connector_Sabre_Node implements \Sabre\DAV\IFile {
+class File extends \OC\Connector\Sabre\Node implements \Sabre\DAV\IFile {
 
 	/**
 	 * Updates the data
@@ -42,10 +43,10 @@ class OC_Connector_Sabre_File extends OC_Connector_Sabre_Node implements \Sabre\
 	 *
 	 * @param resource $data
 	 * @throws \Sabre\DAV\Exception\Forbidden
-	 * @throws OC_Connector_Sabre_Exception_UnsupportedMediaType
+	 * @throws \OC_Connector_Sabre_Exception_UnsupportedMediaType
 	 * @throws \Sabre\DAV\Exception\BadRequest
 	 * @throws \Sabre\DAV\Exception
-	 * @throws OC_Connector_Sabre_Exception_EntityTooLarge
+	 * @throws \OC_Connector_Sabre_Exception_EntityTooLarge
 	 * @throws \Sabre\DAV\Exception\ServiceUnavailable
 	 * @return string|null
 	 */
@@ -99,11 +100,11 @@ class OC_Connector_Sabre_File extends OC_Connector_Sabre_Node implements \Sabre\
 
 		} catch (\OCP\Files\EntityTooLargeException $e) {
 			// the file is too big to be stored
-			throw new OC_Connector_Sabre_Exception_EntityTooLarge($e->getMessage());
+			throw new \OC_Connector_Sabre_Exception_EntityTooLarge($e->getMessage());
 
 		} catch (\OCP\Files\InvalidContentException $e) {
 			// the file content is not permitted
-			throw new OC_Connector_Sabre_Exception_UnsupportedMediaType($e->getMessage());
+			throw new \OC_Connector_Sabre_Exception_UnsupportedMediaType($e->getMessage());
 
 		} catch (\OCP\Files\InvalidPathException $e) {
 			// the path for the file was not valid
@@ -111,7 +112,7 @@ class OC_Connector_Sabre_File extends OC_Connector_Sabre_Node implements \Sabre\
 			throw new \Sabre\DAV\Exception\Forbidden($e->getMessage());
 		} catch (\OCP\Files\LockNotAcquiredException $e) {
 			// the file is currently being written to by another process
-			throw new OC_Connector_Sabre_Exception_FileLocked($e->getMessage(), $e->getCode(), $e);
+			throw new \OC_Connector_Sabre_Exception_FileLocked($e->getMessage(), $e->getCode(), $e);
 		} catch (\OCA\Files_Encryption\Exception\EncryptionException $e) {
 			throw new \Sabre\DAV\Exception\Forbidden($e->getMessage());
 		} catch (\OCP\Files\StorageNotAvailableException $e) {
@@ -144,12 +145,12 @@ class OC_Connector_Sabre_File extends OC_Connector_Sabre_Node implements \Sabre\
 				}
 				catch (\OCP\Files\LockNotAcquiredException $e) {
 					// the file is currently being written to by another process
-					throw new OC_Connector_Sabre_Exception_FileLocked($e->getMessage(), $e->getCode(), $e);
+					throw new \OC_Connector_Sabre_Exception_FileLocked($e->getMessage(), $e->getCode(), $e);
 				}
 			}
 
 			// allow sync clients to send the mtime along in a header
-			$mtime = OC_Request::hasModificationTime();
+			$mtime = \OC_Request::hasModificationTime();
 			if ($mtime !== false) {
 				if($this->fileView->touch($this->path, $mtime)) {
 					header('X-OC-MTime: accepted');
@@ -270,13 +271,13 @@ class OC_Connector_Sabre_File extends OC_Connector_Sabre_Node implements \Sabre\
 	 */
 	private function createFileChunked($data)
 	{
-		list($path, $name) = \Sabre\DAV\URLUtil::splitPath($this->path);
+		list($path, $name) = \Sabre\HTTP\URLUtil::splitPath($this->path);
 
-		$info = OC_FileChunking::decodeName($name);
+		$info = \OC_FileChunking::decodeName($name);
 		if (empty($info)) {
 			throw new \Sabre\DAV\Exception\NotImplemented();
 		}
-		$chunk_handler = new OC_FileChunking($info);
+		$chunk_handler = new \OC_FileChunking($info);
 		$bytesWritten = $chunk_handler->store($info['index'], $data);
 
 		//detect aborted upload
@@ -319,7 +320,7 @@ class OC_Connector_Sabre_File extends OC_Connector_Sabre_Node implements \Sabre\
 				}
 
 				// allow sync clients to send the mtime along in a header
-				$mtime = OC_Request::hasModificationTime();
+				$mtime = \OC_Request::hasModificationTime();
 				if ($mtime !== false) {
 					if($this->fileView->touch($targetPath, $mtime)) {
 						header('X-OC-MTime: accepted');

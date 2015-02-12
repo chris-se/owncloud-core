@@ -30,7 +30,7 @@ class Test_OC_Connector_Sabre_QuotaPlugin extends \Test\TestCase {
 	 */
 	public function testLength($expected, $headers) {
 		$this->init(0);
-		$this->server->httpRequest = new \Sabre\HTTP\Request($headers);
+		$this->server->httpRequest = new \Sabre\HTTP\Request(null, null, $headers);
 		$length = $this->plugin->getLength();
 		$this->assertEquals($expected, $length);
 	}
@@ -41,7 +41,7 @@ class Test_OC_Connector_Sabre_QuotaPlugin extends \Test\TestCase {
 	public function testCheckQuota($quota, $headers) {
 		$this->init($quota);
 
-		$this->server->httpRequest = new Sabre\HTTP\Request($headers);
+		$this->server->httpRequest = new \Sabre\HTTP\Request(null, null, $headers);
 		$result = $this->plugin->checkQuota('');
 		$this->assertTrue($result);
 	}
@@ -53,7 +53,7 @@ class Test_OC_Connector_Sabre_QuotaPlugin extends \Test\TestCase {
 	public function testCheckExceededQuota($quota, $headers) {
 		$this->init($quota);
 
-		$this->server->httpRequest = new Sabre\HTTP\Request($headers);
+		$this->server->httpRequest = new \Sabre\HTTP\Request(null, null, $headers);
 		$this->plugin->checkQuota('');
 	}
 

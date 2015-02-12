@@ -1,4 +1,5 @@
 <?php
+namespace OC\Connector\Sabre;
 
 /**
  * ownCloud
@@ -21,7 +22,7 @@
  *
  */
 
-class OC_Connector_Sabre_Directory extends OC_Connector_Sabre_Node
+class Directory extends \OC\Connector\Sabre\Node
 	implements \Sabre\DAV\ICollection, \Sabre\DAV\IQuota {
 
 	/**
@@ -64,7 +65,7 @@ class OC_Connector_Sabre_Directory extends OC_Connector_Sabre_Node
 			if (isset($_SERVER['HTTP_OC_CHUNKED'])) {
 
 				// exit if we can't create a new file and we don't updatable existing file
-				$info = OC_FileChunking::decodeName($name);
+				$info = \OC_FileChunking::decodeName($name);
 				if (!$this->fileView->isCreatable($this->path) &&
 						!$this->fileView->isUpdatable($this->path . '/' . $info['name'])) {
 					throw new \Sabre\DAV\Exception\Forbidden();
@@ -80,7 +81,7 @@ class OC_Connector_Sabre_Directory extends OC_Connector_Sabre_Node
 			$path = $this->fileView->getAbsolutePath($this->path) . '/' . $name;
 			// using a dummy FileInfo is acceptable here since it will be refreshed after the put is complete
 			$info = new \OC\Files\FileInfo($path, null, null, array(), null);
-			$node = new OC_Connector_Sabre_File($this->fileView, $info);
+			$node = new \OC\Connector\Sabre\File($this->fileView, $info);
 			return $node->put($data);
 		} catch (\OCP\Files\StorageNotAvailableException $e) {
 			throw new \Sabre\DAV\Exception\ServiceUnavailable($e->getMessage());
@@ -132,9 +133,9 @@ class OC_Connector_Sabre_Directory extends OC_Connector_Sabre_Node
 		}
 
 		if ($info['mimetype'] == 'httpd/unix-directory') {
-			$node = new OC_Connector_Sabre_Directory($this->fileView, $info);
+			$node = new \OC\Connector\Sabre\Directory($this->fileView, $info);
 		} else {
-			$node = new OC_Connector_Sabre_File($this->fileView, $info);
+			$node = new \OC\Connector\Sabre\File($this->fileView, $info);
 		}
 		return $node;
 	}
@@ -167,9 +168,9 @@ class OC_Connector_Sabre_Directory extends OC_Connector_Sabre_Node
 			$chunks = array_chunk($paths, 200, false);
 			foreach ($chunks as $pack) {
 				$placeholders = join(',', array_fill(0, count($pack), '?'));
-				$query = OC_DB::prepare( 'SELECT * FROM `*PREFIX*properties`'
+				$query = \OC_DB::prepare( 'SELECT * FROM `*PREFIX*properties`'
 					.' WHERE `userid` = ?' . ' AND `propertypath` IN ('.$placeholders.')' );
-				array_unshift($pack, OC_User::getUser()); // prepend userid
+				array_unshift($pack, \OC_User::getUser()); // prepend userid
 				$result = $query->execute( $pack );
 				while($row = $result->fetchRow()) {
 					$propertypath = $row['propertypath'];
@@ -232,7 +233,7 @@ class OC_Connector_Sabre_Directory extends OC_Connector_Sabre_Node
 	public function getQuotaInfo() {
 		try {
 			$path = \OC\Files\Filesystem::getView()->getRelativePath($this->info->getPath());
-			$storageInfo = OC_Helper::getStorageInfo($path);
+			$storageInfo = \OC_Helper::getStorageInfo($path);
 			return array(
 				$storageInfo['used'],
 				$storageInfo['free']

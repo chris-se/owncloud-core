@@ -210,7 +210,7 @@ class Webdav extends TestCase {
 	 */
 	function handleWebdavRequest($body = false) {
 		// Backends
-		$authBackend = $this->getMockBuilder('OC_Connector_Sabre_Auth')
+		$authBackend = $this->getMockBuilder('OC\Connector\Sabre\Auth')
 			->setMethods(['validateUserPass'])
 			->getMock();
 		$authBackend->expects($this->any())
@@ -223,7 +223,7 @@ class Webdav extends TestCase {
 		// Create ownCloud Dir
 		$root = '/' . $this->userId . '/files';
 		$view = new \OC\Files\View($root);
-		$publicDir = new \OC_Connector_Sabre_Directory($view, $view->getFileInfo(''));
+		$publicDir = new \OC\Connector\Sabre\Directory($view, $view->getFileInfo(''));
 		$objectTree = new \OC\Connector\Sabre\ObjectTree();
 		$mountManager = \OC\Files\Filesystem::getMountManager();
 		$objectTree->init($publicDir, $view, $mountManager);

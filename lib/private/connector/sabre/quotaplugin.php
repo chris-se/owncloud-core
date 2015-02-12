@@ -1,5 +1,4 @@
 <?php
-use Sabre\DAV\URLUtil;
 
 /**
  * This plugin check user quota and deny creating files when they exceeds the quota.
@@ -62,7 +61,7 @@ class OC_Connector_Sabre_QuotaPlugin extends \Sabre\DAV\ServerPlugin {
 			if (substr($uri, 0, 1) !== '/') {
 				$uri = '/' . $uri;
 			}
-			list($parentUri, $newName) = URLUtil::splitPath($uri);
+			list($parentUri, $newName) = \Sabre\HTTP\URLUtil::splitPath($uri);
 			$req = $this->server->httpRequest;
 			if ($req->getHeader('OC-Chunked')) {
 				$info = OC_FileChunking::decodeName($newName);

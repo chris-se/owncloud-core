@@ -195,7 +195,7 @@ class TagsPlugin extends \Sabre\DAV\ServerPlugin
 		$depth
 	) {
 		$node = $this->objectTree->getNodeForPath($path);
-		if (!($node instanceof \OC_Connector_Sabre_Directory)) {
+		if (!($node instanceof \OC\Connector\Sabre\Directory)) {
 			return;
 		}
 
@@ -233,7 +233,7 @@ class TagsPlugin extends \Sabre\DAV\ServerPlugin
 		array &$requestedProperties,
 		array &$returnedProperties
 	) {
-		if (!($node instanceof \OC_Connector_Sabre_Node)) {
+		if (!($node instanceof \OC\Connector\Sabre\Node)) {
 			return;
 		}
 
@@ -261,7 +261,7 @@ class TagsPlugin extends \Sabre\DAV\ServerPlugin
 	 * @return bool success status
 	 */
 	public function updateProperties(array &$properties, array &$result, \Sabre\DAV\INode $node) {
-		if (!($node instanceof \OC_Connector_Sabre_Node)) {
+		if (!($node instanceof \OC\Connector\Sabre\Node)) {
 			return;
 		}
 

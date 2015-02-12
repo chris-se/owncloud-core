@@ -26,12 +26,13 @@
 // Backends
 $authBackend = new \OC\Connector\Sabre\Auth();
 $lockBackend = new OC_Connector_Sabre_Locks();
-$requestBackend = new OC_Connector_Sabre_Request();
+//$requestBackend = new OC_Connector_Sabre_Request();
 
 // Fire up server
 $objectTree = new \OC\Connector\Sabre\ObjectTree();
 $server = new \OC\Connector\Sabre\Server($objectTree);
-$server->httpRequest = $requestBackend;
+// FIXME use another approach ?
+// $server->httpRequest = $requestBackend;
 $server->setBaseUri($baseuri);
 
 // Load plugins
@@ -50,7 +51,7 @@ $server->on('beforeMethod', function () use ($server, $objectTree) {
 
 	// Create ownCloud Dir
 	$mountManager = \OC\Files\Filesystem::getMountManager();
-	$rootDir = new OC_Connector_Sabre_Directory($view, $rootInfo);
+	$rootDir = new \OC\Connector\Sabre\Directory($view, $rootInfo);
 	$objectTree->init($rootDir, $view, $mountManager);
 
 	$server->addPlugin(new \OC\Connector\Sabre\TagsPlugin($objectTree, \OC::$server->getTagManager()));

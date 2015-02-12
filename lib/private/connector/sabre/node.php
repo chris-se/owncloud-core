@@ -1,6 +1,7 @@
 <?php
+namespace OC\Connector\Sabre;
 
-use Sabre\DAV\URLUtil;
+use Sabre\DAV\PropPatch;
 use OC\Connector\Sabre\TagList;
 
 /**
@@ -23,7 +24,7 @@ use OC\Connector\Sabre\TagList;
  * License along with this library.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-abstract class OC_Connector_Sabre_Node implements \Sabre\DAV\INode, \Sabre\DAV\IProperties {
+abstract class Node implements \Sabre\DAV\INode, \Sabre\DAV\IProperties {
 	const GETETAG_PROPERTYNAME = '{DAV:}getetag';
 	const LASTMODIFIED_PROPERTYNAME = '{DAV:}lastmodified';
 
@@ -94,8 +95,8 @@ abstract class OC_Connector_Sabre_Node implements \Sabre\DAV\INode, \Sabre\DAV\I
 			throw new \Sabre\DAV\Exception\Forbidden();
 		}
 
-		list($parentPath,) = URLUtil::splitPath($this->path);
-		list(, $newName) = URLUtil::splitPath($name);
+		list($parentPath,) = \Sabre\HTTP\URLUtil::splitPath($this->path);
+		list(, $newName) = \Sabre\HTTP\URLUtil::splitPath($name);
 
 		if (!\OCP\Util::isValidFileName($newName)) {
 			throw new \Sabre\DAV\Exception\BadRequest();
@@ -108,9 +109,9 @@ abstract class OC_Connector_Sabre_Node implements \Sabre\DAV\INode, \Sabre\DAV\I
 
 		$this->path = $newPath;
 
-		$query = OC_DB::prepare('UPDATE `*PREFIX*properties` SET `propertypath` = ?'
+		$query = \OC_DB::prepare('UPDATE `*PREFIX*properties` SET `propertypath` = ?'
 			. ' WHERE `userid` = ? AND `propertypath` = ?');
-		$query->execute(array($newPath, OC_User::getUser(), $oldPath));
+		$query->execute(array($newPath, \OC_User::getUser(), $oldPath));
 		$this->refreshInfo();
 	}
 
@@ -140,6 +141,10 @@ abstract class OC_Connector_Sabre_Node implements \Sabre\DAV\INode, \Sabre\DAV\I
 		$this->refreshInfo();
 	}
 
+	public function propPatch(PropPatch $propPatch) {
+		// TODO: wire up with updateProperties()
+	}
+
 	/**
 	 * Updates properties on this node,
 	 * @see \Sabre\DAV\IProperties::updateProperties
@@ -152,9 +157,9 @@ abstract class OC_Connector_Sabre_Node implements \Sabre\DAV\INode, \Sabre\DAV\I
 			// If it was null, we need to delete the property
 			if (is_null($propertyValue)) {
 				if (array_key_exists($propertyName, $existing)) {
-					$query = OC_DB::prepare('DELETE FROM `*PREFIX*properties`'
+					$query = \OC_DB::prepare('DELETE FROM `*PREFIX*properties`'
 						. ' WHERE `userid` = ? AND `propertypath` = ? AND `propertyname` = ?');
-					$query->execute(array(OC_User::getUser(), $this->path, $propertyName));
+					$query->execute(array(\OC_User::getUser(), $this->path, $propertyName));
 				}
 			} else {
 				if (strcmp($propertyName, self::GETETAG_PROPERTYNAME) === 0) {
@@ -163,13 +168,13 @@ abstract class OC_Connector_Sabre_Node implements \Sabre\DAV\INode, \Sabre\DAV\I
 					$this->touch($propertyValue);
 				} else {
 					if (!array_key_exists($propertyName, $existing)) {
-						$query = OC_DB::prepare('INSERT INTO `*PREFIX*properties`'
+						$query = \OC_DB::prepare('INSERT INTO `*PREFIX*properties`'
 							. ' (`userid`,`propertypath`,`propertyname`,`propertyvalue`) VALUES(?,?,?,?)');
-						$query->execute(array(OC_User::getUser(), $this->path, $propertyName, $propertyValue));
+						$query->execute(array(\OC_User::getUser(), $this->path, $propertyName, $propertyValue));
 					} else {
-						$query = OC_DB::prepare('UPDATE `*PREFIX*properties` SET `propertyvalue` = ?'
+						$query = \OC_DB::prepare('UPDATE `*PREFIX*properties` SET `propertyvalue` = ?'
 							. ' WHERE `userid` = ? AND `propertypath` = ? AND `propertyname` = ?');
-						$query->execute(array($propertyValue, OC_User::getUser(), $this->path, $propertyName));
+						$query->execute(array($propertyValue, \OC_User::getUser(), $this->path, $propertyName));
 					}
 				}
 			}
@@ -183,9 +188,9 @@ abstract class OC_Connector_Sabre_Node implements \Sabre\DAV\INode, \Sabre\DAV\I
 	 * removes all properties for this node and user
 	 */
 	public function removeProperties() {
-		$query = OC_DB::prepare('DELETE FROM `*PREFIX*properties`'
+		$query = \OC_DB::prepare('DELETE FROM `*PREFIX*properties`'
 			. ' WHERE `userid` = ? AND `propertypath` = ?');
-		$query->execute(array(OC_User::getUser(), $this->path));
+		$query->execute(array(\OC_User::getUser(), $this->path));
 
 		$this->setPropertyCache(null);
 	}
@@ -203,7 +208,7 @@ abstract class OC_Connector_Sabre_Node implements \Sabre\DAV\INode, \Sabre\DAV\I
 
 		if (is_null($this->property_cache)) {
 			$sql = 'SELECT * FROM `*PREFIX*properties` WHERE `userid` = ? AND `propertypath` = ?';
-			$result = OC_DB::executeAudited($sql, array(OC_User::getUser(), $this->path));
+			$result = \OC_DB::executeAudited($sql, array(\OC_User::getUser(), $this->path));
 
 			$this->property_cache = array();
 			while ($row = $result->fetchRow()) {
@@ -242,7 +247,7 @@ abstract class OC_Connector_Sabre_Node implements \Sabre\DAV\INode, \Sabre\DAV\I
 	 */
 	public function getFileId() {
 		if ($this->info->getId()) {
-			$instanceId = OC_Util::getInstanceId();
+			$instanceId = \OC_Util::getInstanceId();
 			$id = sprintf('%08d', $this->info->getId());
 			return $id . $instanceId;
 		}

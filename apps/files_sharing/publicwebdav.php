@@ -59,9 +59,9 @@ $server->on('beforeMethod', function () use ($server, $objectTree, $authBackend)
 
 	// Create ownCloud Dir
 	if ($rootInfo->getType() === 'dir') {
-		$root = new OC_Connector_Sabre_Directory($view, $rootInfo);
+		$root = new \OC\Connector\Sabre\Directory($view, $rootInfo);
 	} else {
-		$root = new OC_Connector_Sabre_File($view, $rootInfo);
+		$root = new \OC\Connector\Sabre\File($view, $rootInfo);
 	}
 	$mountManager = \OC\Files\Filesystem::getMountManager();
 	$objectTree->init($root, $view, $mountManager);

@@ -239,7 +239,7 @@ class OC_Request {
 			$path_info = $_SERVER['PATH_INFO'];
 		}else{
 			$path_info = self::getRawPathInfo();
-			// following is taken from \Sabre\DAV\URLUtil::decodePathSegment
+			// following is taken from \Sabre\HTTP\URLUtil::decodePathSegment
 			$path_info = rawurldecode($path_info);
 			$encoding = mb_detect_encoding($path_info, array('UTF-8', 'ISO-8859-1'));
 
@@ -277,7 +277,7 @@ class OC_Request {
 		$path_info = $requestUri;
 
 		// strip off the script name's dir and file name
-		list($path, $name) = \Sabre\DAV\URLUtil::splitPath($scriptName);
+		list($path, $name) = \Sabre\HTTP\URLUtil::splitPath($scriptName);
 		if (!empty($path)) {
 			if( $path === $path_info || strpos($path_info, $path.'/') === 0) {
 				$path_info = substr($path_info, strlen($path));

@@ -64,7 +64,7 @@ class Server extends \Sabre\DAV\Server {
 		// chunked upload handling
 		if (isset($_SERVER['HTTP_OC_CHUNKED'])) {
 			$filePath = parent::getRequestUri();
-			list($path, $name) = \Sabre\DAV\URLUtil::splitPath($filePath);
+			list($path, $name) = \Sabre\HTTP\URLUtil::splitPath($filePath);
 			$info = OC_FileChunking::decodeName($name);
 			if (!empty($info)) {
 				$filePath = $path . '/' . $info['name'];
