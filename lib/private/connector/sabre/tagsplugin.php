@@ -58,9 +58,10 @@ class TagsPlugin extends \Sabre\DAV\ServerPlugin
 	private $cachedTags;
 
 	/**
+	 * @param \Sabre\DAV\Tree $objectTree object tree
 	 * @param \OCP\ITagManager $tagManager tag manager
 	 */
-	public function __construct(\Sabre\DAV\ObjectTree $objectTree, \OCP\ITagManager $tagManager) {
+	public function __construct(\Sabre\DAV\Tree $objectTree, \OCP\ITagManager $tagManager) {
 		$this->objectTree = $objectTree;
 		$this->tagManager = $tagManager;
 		$this->tagger = null;

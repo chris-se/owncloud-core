@@ -60,32 +60,32 @@ class Test_OC_Connector_Sabre_QuotaPlugin extends \Test\TestCase {
 	public function quotaOkayProvider() {
 		return array(
 			array(1024, array()),
-			array(1024, array('HTTP_X_EXPECTED_ENTITY_LENGTH' => '1024')),
-			array(1024, array('HTTP_CONTENT_LENGTH' => '512')),
-			array(1024, array('HTTP_OC_TOTAL_LENGTH' => '1024', 'HTTP_CONTENT_LENGTH' => '512')),
-			// \OCP\Files\FileInfo::SPACE_UNKNOWN = -2
+			array(1024, array('X-EXPECTED-ENTITY-LENGTH' => '1024')),
+			array(1024, array('CONTENT-LENGTH' => '512')),
+			array(1024, array('OC-TOTAL-LENGTH' => '1024', 'CONTENT-LENGTH' => '512')),
+			// \OCP\Files\FileInfo::SPACE-UNKNOWN = -2
 			array(-2, array()),
-			array(-2, array('HTTP_X_EXPECTED_ENTITY_LENGTH' => '1024')),
-			array(-2, array('HTTP_CONTENT_LENGTH' => '512')),
-			array(-2, array('HTTP_OC_TOTAL_LENGTH' => '1024', 'HTTP_CONTENT_LENGTH' => '512')),
+			array(-2, array('X-EXPECTED-ENTITY-LENGTH' => '1024')),
+			array(-2, array('CONTENT-LENGTH' => '512')),
+			array(-2, array('OC-TOTAL-LENGTH' => '1024', 'CONTENT-LENGTH' => '512')),
 		);
 	}
 
 	public function quotaExceededProvider() {
 		return array(
-			array(1023, array('HTTP_X_EXPECTED_ENTITY_LENGTH' => '1024')),
-			array(511, array('HTTP_CONTENT_LENGTH' => '512')),
-			array(2047, array('HTTP_OC_TOTAL_LENGTH' => '2048', 'HTTP_CONTENT_LENGTH' => '1024')),
+			array(1023, array('X-EXPECTED-ENTITY-LENGTH' => '1024')),
+			array(511, array('CONTENT-LENGTH' => '512')),
+			array(2047, array('OC-TOTAL-LENGTH' => '2048', 'CONTENT-LENGTH' => '1024')),
 		);
 	}
 
 	public function lengthProvider() {
 		return array(
 			array(null, array()),
-			array(1024, array('HTTP_X_EXPECTED_ENTITY_LENGTH' => '1024')),
-			array(512, array('HTTP_CONTENT_LENGTH' => '512')),
-			array(2048, array('HTTP_OC_TOTAL_LENGTH' => '2048', 'HTTP_CONTENT_LENGTH' => '1024')),
-			array(4096, array('HTTP_OC_TOTAL_LENGTH' => '2048', 'HTTP_X_EXPECTED_ENTITY_LENGTH' => '4096')),
+			array(1024, array('X-EXPECTED-ENTITY-LENGTH' => '1024')),
+			array(512, array('CONTENT-LENGTH' => '512')),
+			array(2048, array('OC-TOTAL-LENGTH' => '2048', 'CONTENT-LENGTH' => '1024')),
+			array(4096, array('OC-TOTAL-LENGTH' => '2048', 'X-EXPECTED-ENTITY-LENGTH' => '4096')),
 		);
 	}
 

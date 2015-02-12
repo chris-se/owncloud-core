@@ -42,7 +42,7 @@ class TagsPlugin extends \Test\TestCase {
 	public function setUp() {
 		parent::setUp();
 		$this->server = new \Sabre\DAV\Server();
-		$this->tree = $this->getMockBuilder('\Sabre\DAV\ObjectTree')
+		$this->tree = $this->getMockBuilder('\Sabre\DAV\Tree')
 			->disableOriginalConstructor()
 			->getMock();
 		$this->tagger = $this->getMock('\OCP\ITags');
@@ -59,7 +59,7 @@ class TagsPlugin extends \Test\TestCase {
 	 * @dataProvider tagsGetPropertiesDataProvider
 	 */
 	public function testGetProperties($tags, $requestedProperties, $expectedProperties) {
-		$node = $this->getMockBuilder(' \OC\Connector\Sabre\Node')
+		$node = $this->getMockBuilder('\OC\Connector\Sabre\Node')
 			->disableOriginalConstructor()
 			->getMock();
 		$node->expects($this->any())
@@ -92,13 +92,13 @@ class TagsPlugin extends \Test\TestCase {
 	 * @dataProvider tagsGetPropertiesDataProvider
 	 */
 	public function testPreloadThenGetProperties($tags, $requestedProperties, $expectedProperties) {
-		$node1 = $this->getMockBuilder(' \OC\Connector\Sabre\File')
+		$node1 = $this->getMockBuilder('\OC\Connector\Sabre\File')
 			->disableOriginalConstructor()
 			->getMock();
 		$node1->expects($this->any())
 			->method('getId')
 			->will($this->returnValue(111));
-		$node2 = $this->getMockBuilder(' \OC\Connector\Sabre\File')
+		$node2 = $this->getMockBuilder('\OC\Connector\Sabre\File')
 			->disableOriginalConstructor()
 			->getMock();
 		$node2->expects($this->any())
@@ -113,7 +113,7 @@ class TagsPlugin extends \Test\TestCase {
 			$expectedCallCount = 1;
 		}
 
-		$node = $this->getMockBuilder(' \OC\Connector\Sabre\Directory')
+		$node = $this->getMockBuilder('\OC\Connector\Sabre\Directory')
 			->disableOriginalConstructor()
 			->getMock();
 		$node->expects($this->any())
@@ -212,7 +212,7 @@ class TagsPlugin extends \Test\TestCase {
 	public function testUpdateTags() {
 		// this test will replace the existing tags "tagremove" with "tag1" and "tag2"
 		// and keep "tagkeep"
-		$node = $this->getMockBuilder(' \OC\Connector\Sabre\Node')
+		$node = $this->getMockBuilder('\OC\Connector\Sabre\Node')
 			->disableOriginalConstructor()
 			->getMock();
 		$node->expects($this->any())
@@ -262,7 +262,7 @@ class TagsPlugin extends \Test\TestCase {
 	public function testUpdateFav() {
 		// this test will replace the existing tags "tagremove" with "tag1" and "tag2"
 		// and keep "tagkeep"
-		$node = $this->getMockBuilder(' \OC\Connector\Sabre\Node')
+		$node = $this->getMockBuilder('\OC\Connector\Sabre\Node')
 			->disableOriginalConstructor()
 			->getMock();
 		$node->expects($this->any())
