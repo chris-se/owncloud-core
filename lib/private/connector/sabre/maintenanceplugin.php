@@ -33,7 +33,7 @@ class OC_Connector_Sabre_MaintenancePlugin extends \Sabre\DAV\ServerPlugin
 	public function initialize(\Sabre\DAV\Server $server) {
 
 		$this->server = $server;
-		$this->server->subscribeEvent('beforeMethod', array($this, 'checkMaintenanceMode'), 10);
+		$this->server->on('beforeMethod', array($this, 'checkMaintenanceMode'), 10);
 	}
 
 	/**

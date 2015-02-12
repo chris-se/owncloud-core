@@ -44,8 +44,8 @@ class OC_Connector_Sabre_QuotaPlugin extends \Sabre\DAV\ServerPlugin {
 
 		$this->server = $server;
 
-		$server->subscribeEvent('beforeWriteContent', array($this, 'checkQuota'), 10);
-		$server->subscribeEvent('beforeCreateFile', array($this, 'checkQuota'), 10);
+		$server->on('beforeWriteContent', array($this, 'checkQuota'), 10);
+		$server->on('beforeCreateFile', array($this, 'checkQuota'), 10);
 	}
 
 	/**

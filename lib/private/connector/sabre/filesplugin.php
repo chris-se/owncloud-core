@@ -42,9 +42,9 @@ class OC_Connector_Sabre_FilesPlugin extends \Sabre\DAV\ServerPlugin
 		$server->protectedProperties[] = '{' . self::NS_OWNCLOUD . '}downloadURL';
 
 		$this->server = $server;
-		$this->server->subscribeEvent('beforeGetProperties', array($this, 'beforeGetProperties'));
-		$this->server->subscribeEvent('afterBind', array($this, 'sendFileIdHeader'));
-		$this->server->subscribeEvent('afterWriteContent', array($this, 'sendFileIdHeader'));
+		$this->server->on('beforeGetProperties', array($this, 'beforeGetProperties'));
+		$this->server->on('afterBind', array($this, 'sendFileIdHeader'));
+		$this->server->on('afterWriteContent', array($this, 'sendFileIdHeader'));
 	}
 
 	/**

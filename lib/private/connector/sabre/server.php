@@ -1,4 +1,6 @@
 <?php
+namespace OC\Connector\Sabre;
+
 /**
  * ownCloud / SabreDAV
  *
@@ -8,6 +10,9 @@
  * @author Evert Pot (http://www.rooftopsolutions.nl/)
  * @license http://code.google.com/p/sabredav/wiki/License Modified BSD License
  */
+
+use Sabre\HTTP\RequestInterface;
+use Sabre\HTTP\ResponseInterface;
 
 /**
  * Class OC_Connector_Sabre_Server
@@ -26,7 +31,7 @@
  *
  * @see \Sabre\DAV\Server
  */
-class OC_Connector_Sabre_Server extends Sabre\DAV\Server {
+class Server extends \Sabre\DAV\Server {
 
 	/**
 	 * @var string
@@ -55,7 +60,7 @@ class OC_Connector_Sabre_Server extends Sabre\DAV\Server {
 		return parent::getRequestUri();
 	}
 
-	public function checkPreconditions($handleAsGET = false) {
+	public function checkPreconditions(RequestInterface $request, ResponseInterface $response) {
 		// chunked upload handling
 		if (isset($_SERVER['HTTP_OC_CHUNKED'])) {
 			$filePath = parent::getRequestUri();
@@ -67,7 +72,7 @@ class OC_Connector_Sabre_Server extends Sabre\DAV\Server {
 			}
 		}
 
-		$result = parent::checkPreconditions($handleAsGET);
+		$result = parent::checkPreconditions($request, $response);
 		$this->overLoadedUri = null;
 		return $result;
 	}
@@ -149,7 +154,7 @@ class OC_Connector_Sabre_Server extends Sabre\DAV\Server {
 		//
 		// We're not doing anything with the result, but this can be helpful to
 		// pre-fetch certain expensive live properties.
-		$this->broadCastEvent('beforeGetPropertiesForPath', array($path, $propertyNames, $depth));
+		$this->on('beforeGetPropertiesForPath', array($path, $propertyNames, $depth));
 
 		$returnPropertyList = array();
 
@@ -201,7 +206,7 @@ class OC_Connector_Sabre_Server extends Sabre\DAV\Server {
 				$removeRT = true;
 			}
 
-			$result = $this->broadcastEvent('beforeGetProperties',array($myPath, $node, &$currentPropertyNames, &$newProperties));
+			$result = $this->on('beforeGetProperties',array($myPath, $node, &$currentPropertyNames, &$newProperties));
 			// If this method explicitly returned false, we must ignore this
 			// node as it is inaccessible.
 			if ($result===false) continue;
@@ -277,7 +282,7 @@ class OC_Connector_Sabre_Server extends Sabre\DAV\Server {
 
 			}
 
-			$this->broadcastEvent('afterGetProperties',array(trim($myPath,'/'),&$newProperties, $node));
+			$this->on('afterGetProperties',array(trim($myPath,'/'),&$newProperties, $node));
 
 			$newProperties['href'] = trim($myPath,'/');
 

@@ -24,13 +24,13 @@
  */
 
 // Backends
-$authBackend = new OC_Connector_Sabre_Auth();
+$authBackend = new \OC\Connector\Sabre\Auth();
 $lockBackend = new OC_Connector_Sabre_Locks();
 $requestBackend = new OC_Connector_Sabre_Request();
 
 // Fire up server
 $objectTree = new \OC\Connector\Sabre\ObjectTree();
-$server = new OC_Connector_Sabre_Server($objectTree);
+$server = new \OC\Connector\Sabre\Server($objectTree);
 $server->httpRequest = $requestBackend;
 $server->setBaseUri($baseuri);
 
@@ -44,7 +44,7 @@ $server->addPlugin(new OC_Connector_Sabre_MaintenancePlugin());
 $server->addPlugin(new OC_Connector_Sabre_ExceptionLoggerPlugin('webdav'));
 
 // wait with registering these until auth is handled and the filesystem is setup
-$server->subscribeEvent('beforeMethod', function () use ($server, $objectTree) {
+$server->on('beforeMethod', function () use ($server, $objectTree) {
 	$view = \OC\Files\Filesystem::getView();
 	$rootInfo = $view->getFileInfo('');
 

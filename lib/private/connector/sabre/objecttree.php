@@ -14,7 +14,7 @@ use OC\Files\Mount\MoveableMount;
 use OCP\Files\StorageInvalidException;
 use OCP\Files\StorageNotAvailableException;
 
-class ObjectTree extends \Sabre\DAV\ObjectTree {
+class ObjectTree extends \Sabre\DAV\Tree {
 
 	/**
 	 * @var \OC\Files\View

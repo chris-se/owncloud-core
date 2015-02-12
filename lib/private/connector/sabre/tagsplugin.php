@@ -84,9 +84,9 @@ class TagsPlugin extends \Sabre\DAV\ServerPlugin
 		$server->propertyMap[self::TAGS_PROPERTYNAME] = 'OC\\Connector\\Sabre\\TagList';
 
 		$this->server = $server;
-		$this->server->subscribeEvent('beforeGetProperties', array($this, 'beforeGetProperties'));
-		$this->server->subscribeEvent('beforeGetPropertiesForPath', array($this, 'beforeGetPropertiesForPath'));
-		$this->server->subscribeEvent('updateProperties', array($this, 'updateProperties'));
+		$this->server->on('beforeGetProperties', array($this, 'beforeGetProperties'));
+		$this->server->on('beforeGetPropertiesForPath', array($this, 'beforeGetPropertiesForPath'));
+		$this->server->on('updateProperties', array($this, 'updateProperties'));
 	}
 
 	/**
