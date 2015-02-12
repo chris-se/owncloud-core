@@ -10,11 +10,18 @@ namespace OC\Connector\Sabre;
  * @license AGPL3
  */
 
+use \Sabre\DaV\PropFind;
+use \Sabre\DaV\PropPatch;
+
 class FilesPlugin extends \Sabre\DAV\ServerPlugin
 {
 
 	// namespace
 	const NS_OWNCLOUD = 'http://owncloud.org/ns';
+	const FILEID_PROPERTYNAME = '{http://owncloud.org/ns}id';
+	const PERMISSIONS_PROPERTYNAME = '{http://owncloud.org/ns}permissions';
+	const DOWNLOADURL_PROPERTYNAME = '{http://owncloud.org/ns}downloadURL';
+	const SIZE_PROPERTYNAME = '{http://owncloud.org/ns}size';
 
 	/**
 	 * Reference to main server object
@@ -37,13 +44,13 @@ class FilesPlugin extends \Sabre\DAV\ServerPlugin
 	public function initialize(\Sabre\DAV\Server $server) {
 
 		$server->xmlNamespaces[self::NS_OWNCLOUD] = 'oc';
-		$server->protectedProperties[] = '{' . self::NS_OWNCLOUD . '}id';
-		$server->protectedProperties[] = '{' . self::NS_OWNCLOUD . '}permissions';
-		$server->protectedProperties[] = '{' . self::NS_OWNCLOUD . '}size';
-		$server->protectedProperties[] = '{' . self::NS_OWNCLOUD . '}downloadURL';
+		$server->protectedProperties[] = FILEID_PROPERTYNAME;
+		$server->protectedProperties[] = PERMISSIONS_PROPERTYNAME;
+		$server->protectedProperties[] = SIZE_PROPERTYNAME;
+		$server->protectedProperties[] = DOWNLOADURL_PROPERTYNAME;
 
 		$this->server = $server;
-		$this->server->on('beforeGetProperties', array($this, 'beforeGetProperties'));
+		$this->server->on('propFind', array($this, 'handleGetProperties'));
 		$this->server->on('afterBind', array($this, 'sendFileIdHeader'));
 		$this->server->on('afterWriteContent', array($this, 'sendFileIdHeader'));
 	}
@@ -51,51 +58,39 @@ class FilesPlugin extends \Sabre\DAV\ServerPlugin
 	/**
 	 * Adds all ownCloud-specific properties
 	 *
-	 * @param string $path
+	 * @param PropFind $propFind
 	 * @param \Sabre\DAV\INode $node
-	 * @param array $requestedProperties
-	 * @param array $returnedProperties
 	 * @return void
 	 */
-	public function beforeGetProperties($path, \Sabre\DAV\INode $node, array &$requestedProperties, array &$returnedProperties) {
+	public function handleGetProperties(PropFind $propFind, \Sabre\DAV\INode $node) {
 
 		if ($node instanceof \OC\Connector\Sabre\Node) {
 
-			$fileIdPropertyName = '{' . self::NS_OWNCLOUD . '}id';
-			$permissionsPropertyName = '{' . self::NS_OWNCLOUD . '}permissions';
-			if (array_search($fileIdPropertyName, $requestedProperties)) {
-				unset($requestedProperties[array_search($fileIdPropertyName, $requestedProperties)]);
-			}
-			if (array_search($permissionsPropertyName, $requestedProperties)) {
-				unset($requestedProperties[array_search($permissionsPropertyName, $requestedProperties)]);
-			}
+			$propFind->handle(self::FILEID_PROPERTYNAME, function() use ($node) {
+				return $node->getFileId();
+			});
 
 			/** @var $node \OC\Connector\Sabre\Node */
-			$fileId = $node->getFileId();
-			if (!is_null($fileId)) {
-				$returnedProperties[200][$fileIdPropertyName] = $fileId;
-			}
-
-			$permissions = $node->getDavPermissions();
-			if (!is_null($permissions)) {
-				$returnedProperties[200][$permissionsPropertyName] = $permissions;
-			}
+			$propFind->handle(self::PERMISSIONS_PROPERTYNAME, function() use ($node) {
+				return $node->getDavPermissions();
+			});
 		}
 
 		if ($node instanceof \OC\Connector\Sabre\File) {
-			/** @var $node \OC\Connector\Sabre\File */
-			$directDownloadUrl = $node->getDirectDownload();
-			if (isset($directDownloadUrl['url'])) {
-				$directDownloadUrlPropertyName = '{' . self::NS_OWNCLOUD . '}downloadURL';
-				$returnedProperties[200][$directDownloadUrlPropertyName] = $directDownloadUrl['url'];
-			}
+			$propFind->handle(self::DOWNLOADURL_PROPERTYNAME, function() use ($node) {
+				/** @var $node \OC\Connector\Sabre\File */
+				$directDownloadUrl = $node->getDirectDownload();
+				if (isset($directDownloadUrl['url'])) {
+					return $directDownloadUrl['url'];
+				}
+				return false;
+			});
 		}
 
 		if ($node instanceof \OC\Connector\Sabre\Directory) {
-			$sizePropertyName = '{' . self::NS_OWNCLOUD . '}size';
-
-			/** @var $node \OC\Connector\Sabre\Directory */
-			$returnedProperties[200][$sizePropertyName] = $node->getSize();
+			$propFind->handle(self::SIZE_PROPERTYNAME, function() use ($node) {
+				return $node->getSize();
+			});
 		}
 	}
 
