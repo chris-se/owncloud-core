@@ -23,6 +23,9 @@ namespace OC\Connector\Sabre;
  *
  */
 
+use \Sabre\DaV\PropFind;
+use \Sabre\DaV\PropPatch;
+
 class TagsPlugin extends \Sabre\DAV\ServerPlugin
 {
 
@@ -58,11 +61,16 @@ class TagsPlugin extends \Sabre\DAV\ServerPlugin
 	private $cachedTags;
 
 	/**
-	 * @param \Sabre\DAV\Tree $objectTree object tree
+	 * @var \Sabre\DAV\Tree
+	 */
+	private $tree;
+
+	/**
+	 * @param \Sabre\DAV\Tree $tree tree
 	 * @param \OCP\ITagManager $tagManager tag manager
 	 */
-	public function __construct(\Sabre\DAV\Tree $objectTree, \OCP\ITagManager $tagManager) {
-		$this->objectTree = $objectTree;
+	public function __construct(\Sabre\DAV\Tree $tree, \OCP\ITagManager $tagManager) {
+		$this->tree = $tree;
 		$this->tagManager = $tagManager;
 		$this->tagger = null;
 		$this->cachedTags = null;
@@ -85,25 +93,8 @@ class TagsPlugin extends \Sabre\DAV\ServerPlugin
 		$server->propertyMap[self::TAGS_PROPERTYNAME] = 'OC\\Connector\\Sabre\\TagList';
 
 		$this->server = $server;
-		$this->server->on('beforeGetProperties', array($this, 'beforeGetProperties'));
-		$this->server->on('beforeGetPropertiesForPath', array($this, 'beforeGetPropertiesForPath'));
-		$this->server->on('updateProperties', array($this, 'updateProperties'));
-	}
-
-	/**
-	 * Searches and removes a value from the given array
-	 *
-	 * @param array $requestedProps
-	 * @param string $propName to remove
-	 * @return boolean true if the property was present, false otherwise
-	 */
-	private function findAndRemoveProperty(&$requestedProps, $propName) {
-		$index = array_search($propName, $requestedProps);
-		if ($index !== false) {
-			unset($requestedProps[$index]);
-			return true;
-		}
-		return false;
+		$this->server->on('propFind', array($this, 'handleGetProperties'));
+		$this->server->on('propPatch', array($this, 'handleUpdateProperties'));
 	}
 
 	/**
@@ -183,56 +174,16 @@ class TagsPlugin extends \Sabre\DAV\ServerPlugin
 	}
 
 	/**
-	 * Pre-fetch tags info
-	 *
-	 * @param string $path
-	 * @param array $requestedProperties
-	 * @param integer $depth
-	 * @return void
-	 */
-	public function beforeGetPropertiesForPath(
-		$path,
-		array $requestedProperties,
-		$depth
-	) {
-		$node = $this->objectTree->getNodeForPath($path);
-		if (!($node instanceof \OC\Connector\Sabre\Directory)) {
-			return;
-		}
-
-		if ($this->findAndRemoveProperty($requestedProperties, self::TAGS_PROPERTYNAME)
-			|| $this->findAndRemoveProperty($requestedProperties, self::FAVORITE_PROPERTYNAME)
-		) {
-			$fileIds = array();
-			// note: pre-fetching only supported for depth <= 1
-			$folderContent = $node->getChildren();
-			// TODO: refactor somehow with the similar array that is created
-			// in getChildren()
-			foreach ($folderContent as $info) {
-				$fileIds[] = $info->getId();
-			}
-			$tags = $this->getTagger()->getTagsForObjects($fileIds);
-			if ($tags) {
-				$this->cachedTags = $tags;
-			}
-		}
-	}
-
-	/**
 	 * Adds tags and favorites properties to the response,
 	 * if requested.
 	 *
-	 * @param string $path
+	 * @param PropFind $propFind
 	 * @param \Sabre\DAV\INode $node
-	 * @param array $requestedProperties
-	 * @param array $returnedProperties
 	 * @return void
 	 */
-	public function beforeGetProperties(
-		$path,
-		\Sabre\DAV\INode $node,
-		array &$requestedProperties,
-		array &$returnedProperties
+	public function handleGetProperties(
+		PropFind $propFind,
+		\Sabre\DAV\INode $node
 	) {
 		if (!($node instanceof \OC\Connector\Sabre\Node)) {
 			return;
@@ -240,51 +191,45 @@ class TagsPlugin extends \Sabre\DAV\ServerPlugin
 
 		$tags = null;
 		$isFav = null;
-		if ($this->findAndRemoveProperty($requestedProperties, self::TAGS_PROPERTYNAME)) {
-			list($tags, $isFav) = $this->getTagsAndFav($node->getId());
-			$returnedProperties[200][self::TAGS_PROPERTYNAME] = new TagList($tags);
-		}
-		if ($this->findAndRemoveProperty($requestedProperties, self::FAVORITE_PROPERTYNAME)) {
-			if (is_null($tags)) {
-				list($tags, $isFav) = $this->getTagsAndFav($node->getId());
+		$self = $this;
+
+		$propFind->handle(self::TAGS_PROPERTYNAME, function() use ($self, $tags, $isFav, $node) {
+			list($tags, $isFav) = $self->getTagsAndFav($node->getId());
+			return new TagList($tags);
+		});
+
+		$propFind->handle(self::FAVORITE_PROPERTYNAME, function() use ($self, $isFav, $node) {
+			if (is_null($isFav)) {
+				list(, $isFav) = $self->getTagsAndFav($node->getId());
 			}
-			$returnedProperties[200][self::FAVORITE_PROPERTYNAME] = $isFav;
-		}
+			return $isFav;
+		});
 	}
 
 	/**
 	 * Updates tags and favorites properties, if applicable.
 	 *
-	 * @param string $path
+	 * @param PropPatch $propPatch
 	 * @param \Sabre\DAV\INode $node
-	 * @param array $requestedProperties
-	 * @param array $returnedProperties
-	 * @return bool success status
+	 * @return void
 	 */
-	public function updateProperties(array &$properties, array &$result, \Sabre\DAV\INode $node) {
-		if (!($node instanceof \OC\Connector\Sabre\Node)) {
-			return;
-		}
+	public function handleUpdateProperties($path, PropPatch $propPatch) {
+		$self = $this;
 
-		$fileId = $node->getId();
-		if (isset($properties[self::TAGS_PROPERTYNAME])) {
-			$tagsProp = $properties[self::TAGS_PROPERTYNAME];
-			unset($properties[self::TAGS_PROPERTYNAME]);
-			$this->updateTags($fileId, $tagsProp->getTags());
-			$result[200][self::TAGS_PROPERTYNAME] = new TagList($tagsProp->getTags());
-		}
-		if (isset($properties[self::FAVORITE_PROPERTYNAME])) {
-			$favState = $properties[self::FAVORITE_PROPERTYNAME];
-			unset($properties[self::FAVORITE_PROPERTYNAME]);
+		$propPatch->handle(self::TAGS_PROPERTYNAME, function($tagList) use ($self, $path) {
+			$node = $self->tree->getNodeForPath($path);
+			$self->updateTags($node->getId(), $tagList->getTags());
+			return true;
+		});
+
+		$propPatch->handle(self::FAVORITE_PROPERTYNAME, function($favState) use ($self, $path) {
+			$node = $self->tree->getNodeForPath($path);
 			if ((int)$favState === 1 || $favState === 'true') {
-				$favState = true;
-				$this->getTagger()->tagAs($fileId, self::TAG_FAVORITE);
+				$self->getTagger()->tagAs($node->getId(), self::TAG_FAVORITE);
 			} else {
-				$favState = false;
-				$this->getTagger()->unTag($fileId, self::TAG_FAVORITE);
+				$self->getTagger()->unTag($node->getId(), self::TAG_FAVORITE);
 			}
-			$result[200][self::FAVORITE_PROPERTYNAME] = $favState;
-		}
-		return true;
+			return 200;
+		});
 	}
 }
