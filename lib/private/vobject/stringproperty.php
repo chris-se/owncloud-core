@@ -28,7 +28,7 @@ namespace OC\VObject;
  * This class overrides \Sabre\VObject\Property::serialize() properly
  * escape commas and semi-colons in string properties.
 */
-class StringProperty extends \Sabre\VObject\Property {
+class StringProperty extends \Sabre\VObject\Property\Text {
 
 	/**
 	* Turns the object back into a serialized blob.

@@ -8,15 +8,22 @@
 
 class Test_VObject extends \Test\TestCase {
 
+	/**
+	 * @var \Sabre\VObject\Component
+	 */
+	private $component;
+
 	protected function setUp() {
 		parent::setUp();
 
-		Sabre\VObject\Property::$classMap['SUMMARY'] = 'OC\VObject\StringProperty';
-		Sabre\VObject\Property::$classMap['ORG'] = 'OC\VObject\CompoundProperty';
+		$this->component = $this->getMockBuilder('\Sabre\VObject\Component')
+			->disableOriginalConstructor()
+			->getMock();
 	}
 
+
 	function testStringProperty() {
-		$property = Sabre\VObject\Property::create('SUMMARY', 'Escape;this,please');
+		$property = new \OC\VObject\StringProperty($this->component, 'SUMMARY', 'Escape;this,please');
 		$this->assertEquals("SUMMARY:Escape\;this\,please\r\n", $property->serialize());
 	}
 
@@ -28,10 +35,10 @@ class Test_VObject extends \Test\TestCase {
 			'Marketing;Sales',
 		);
 
-		$property = Sabre\VObject\Property::create('ORG');
+		$property = new \OC\VObject\CompoundProperty($this->component, 'ORG');
 		$property->setParts($arr);
 
-		$this->assertEquals('ABC\, Inc.;North American Division;Marketing\;Sales', $property->value);
+		$this->assertEquals('ABC\, Inc.;North American Division;Marketing\;Sales', $property->getValue());
 		$this->assertEquals('ORG:ABC\, Inc.;North American Division;Marketing\;Sales' . "\r\n", $property->serialize());
 		$this->assertEquals(3, count($property->getParts()));
 		$parts = $property->getParts();

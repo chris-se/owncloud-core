@@ -26,7 +26,7 @@ namespace OC\VObject;
  * This class overrides \Sabre\VObject\Property::serialize() to not
  * double escape commas and semi-colons in compound properties.
 */
-class CompoundProperty extends \Sabre\VObject\Property\Compound {
+class CompoundProperty extends \Sabre\VObject\Property\Text {
 
 	/**
 	* Turns the object back into a serialized blob.
@@ -49,7 +49,7 @@ class CompoundProperty extends \Sabre\VObject\Property\Compound {
 		$out = array(
 			'\n',
 		);
-		$str.=':' . str_replace($src, $out, $this->value);
+		$str.=':' . str_replace($src, $out, $this->getValue());
 
 		$out = '';
 		while(strlen($str) > 0) {
