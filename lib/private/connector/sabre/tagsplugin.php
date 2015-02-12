@@ -189,6 +189,29 @@ class TagsPlugin extends \Sabre\DAV\ServerPlugin
 			return;
 		}
 
+		// need prefetch ?
+		if ($node instanceof \OC\Connector\Sabre\Directory
+			&& $propFind->getDepth() === 1
+			&& (!is_null($propFind->getStatus(self::TAGS_PROPERTYNAME))
+			|| !is_null($propFind->getStatus(self::FAVORITE_PROPERTYNAME))
+		)) {
+			// note: pre-fetching only supported for depth <= 1
+			$folderContent = $node->getChildren();
+			$fileIds[] = (int)$node->getId();
+			foreach ($folderContent as $info) {
+				$fileIds[] = (int)$info->getId();
+			}
+			$tags = $this->getTagger()->getTagsForObjects($fileIds);
+			if ($tags) {
+				$this->cachedTags = $tags;
+				$emptyFileIds = array_diff($fileIds, array_keys($tags));
+				// also cache the ones that were not found
+				foreach ($emptyFileIds as $fileId) {
+					$this->cachedTags[$fileId] = [];
+				}
+			}
+		}
+
 		$tags = null;
 		$isFav = null;
 		$self = $this;
