@@ -23,8 +23,8 @@ namespace OC\Connector\Sabre;
  *
  */
 
-use \Sabre\DaV\PropFind;
-use \Sabre\DaV\PropPatch;
+use \Sabre\DAV\PropFind;
+use \Sabre\DAV\PropPatch;
 
 class TagsPlugin extends \Sabre\DAV\ServerPlugin
 {

@@ -10,8 +10,8 @@ namespace OC\Connector\Sabre;
  * @license AGPL3
  */
 
-use \Sabre\DaV\PropFind;
-use \Sabre\DaV\PropPatch;
+use \Sabre\DAV\PropFind;
+use \Sabre\DAV\PropPatch;
 
 class FilesPlugin extends \Sabre\DAV\ServerPlugin
 {
