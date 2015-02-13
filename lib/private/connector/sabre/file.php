@@ -205,10 +205,6 @@ class File extends \OC\Connector\Sabre\Node implements \Sabre\DAV\IFile {
 		} catch (\OCP\Files\StorageNotAvailableException $e) {
 			throw new \Sabre\DAV\Exception\ServiceUnavailable("Failed to unlink: ".$e->getMessage());
 		}
-
-		// remove properties
-		$this->removeProperties();
-
 	}
 
 	/**

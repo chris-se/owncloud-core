@@ -56,6 +56,17 @@ $server->on('beforeMethod', function () use ($server, $objectTree) {
 
 	$server->addPlugin(new \OC\Connector\Sabre\TagsPlugin($objectTree, \OC::$server->getTagManager()));
 	$server->addPlugin(new \OC\Connector\Sabre\QuotaPlugin($view));
+
+	// custom properties plugin must be the last one
+	$server->addPlugin(
+		new \Sabre\DAV\PropertyStorage\Plugin(
+			new \OC\Connector\Sabre\CustomPropertiesBackend(
+				$objectTree,
+				\OC::$server->getDatabaseConnection(),
+				\OC::$server->getUserSession()->getUser()
+			)
+		)
+	);
 }, 30); // priority 30: after auth (10) and acl(20), before lock(50) and handling the request
 
 // And off we go!

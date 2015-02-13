@@ -24,9 +24,8 @@ use OC\Connector\Sabre\TagList;
  * License along with this library.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-abstract class Node implements \Sabre\DAV\INode, \Sabre\DAV\IProperties {
+abstract class Node implements \Sabre\DAV\INode {
 	const GETETAG_PROPERTYNAME = '{DAV:}getetag';
-	const LASTMODIFIED_PROPERTYNAME = '{DAV:}lastmodified';
 
 	/**
 	 * Allow configuring the method used to generate Etags
@@ -83,6 +82,15 @@ abstract class Node implements \Sabre\DAV\INode, \Sabre\DAV\IProperties {
 	}
 
 	/**
+	 * Returns the full path
+	 *
+	 * @return string
+	 */
+	public function getPath() {
+		return $this->path;
+	}
+
+	/**
 	 * Renames the node
 	 * @param string $name The new name
 	 * @throws \Sabre\DAV\Exception\BadRequest
@@ -103,15 +111,11 @@ abstract class Node implements \Sabre\DAV\INode, \Sabre\DAV\IProperties {
 		}
 
 		$newPath = $parentPath . '/' . $newName;
-		$oldPath = $this->path;
 
 		$this->fileView->rename($this->path, $newPath);
 
 		$this->path = $newPath;
 
-		$query = \OC_DB::prepare('UPDATE `*PREFIX*properties` SET `propertypath` = ?'
-			. ' WHERE `userid` = ? AND `propertypath` = ?');
-		$query->execute(array($newPath, \OC_User::getUser(), $oldPath));
 		$this->refreshInfo();
 	}
 
@@ -139,98 +143,6 @@ abstract class Node implements \Sabre\DAV\INode, \Sabre\DAV\IProperties {
 	public function touch($mtime) {
 		$this->fileView->touch($this->path, $mtime);
 		$this->refreshInfo();
-	}
-
-	public function propPatch(PropPatch $propPatch) {
-		// TODO: wire up with updateProperties()
-	}
-
-	/**
-	 * Updates properties on this node,
-	 * @see \Sabre\DAV\IProperties::updateProperties
-	 * @param array $properties
-	 * @return boolean
-	 */
-	public function updateProperties($properties) {
-		$existing = $this->getProperties(array());
-		foreach ($properties as $propertyName => $propertyValue) {
-			// If it was null, we need to delete the property
-			if (is_null($propertyValue)) {
-				if (array_key_exists($propertyName, $existing)) {
-					$query = \OC_DB::prepare('DELETE FROM `*PREFIX*properties`'
-						. ' WHERE `userid` = ? AND `propertypath` = ? AND `propertyname` = ?');
-					$query->execute(array(\OC_User::getUser(), $this->path, $propertyName));
-				}
-			} else {
-				if (strcmp($propertyName, self::GETETAG_PROPERTYNAME) === 0) {
-					\OC\Files\Filesystem::putFileInfo($this->path, array('etag' => $propertyValue));
-				} elseif (strcmp($propertyName, self::LASTMODIFIED_PROPERTYNAME) === 0) {
-					$this->touch($propertyValue);
-				} else {
-					if (!array_key_exists($propertyName, $existing)) {
-						$query = \OC_DB::prepare('INSERT INTO `*PREFIX*properties`'
-							. ' (`userid`,`propertypath`,`propertyname`,`propertyvalue`) VALUES(?,?,?,?)');
-						$query->execute(array(\OC_User::getUser(), $this->path, $propertyName, $propertyValue));
-					} else {
-						$query = \OC_DB::prepare('UPDATE `*PREFIX*properties` SET `propertyvalue` = ?'
-							. ' WHERE `userid` = ? AND `propertypath` = ? AND `propertyname` = ?');
-						$query->execute(array($propertyValue, \OC_User::getUser(), $this->path, $propertyName));
-					}
-				}
-			}
-
-		}
-		$this->setPropertyCache(null);
-		return true;
-	}
-
-	/**
-	 * removes all properties for this node and user
-	 */
-	public function removeProperties() {
-		$query = \OC_DB::prepare('DELETE FROM `*PREFIX*properties`'
-			. ' WHERE `userid` = ? AND `propertypath` = ?');
-		$query->execute(array(\OC_User::getUser(), $this->path));
-
-		$this->setPropertyCache(null);
-	}
-
-	/**
-	 * Returns a list of properties for this nodes.;
-	 * @param array $properties
-	 * @return array
-	 * @note The properties list is a list of propertynames the client
-	 * requested, encoded as xmlnamespace#tagName, for example:
-	 * http://www.example.org/namespace#author If the array is empty, all
-	 * properties should be returned
-	 */
-	public function getProperties($properties) {
-
-		if (is_null($this->property_cache)) {
-			$sql = 'SELECT * FROM `*PREFIX*properties` WHERE `userid` = ? AND `propertypath` = ?';
-			$result = \OC_DB::executeAudited($sql, array(\OC_User::getUser(), $this->path));
-
-			$this->property_cache = array();
-			while ($row = $result->fetchRow()) {
-				$this->property_cache[$row['propertyname']] = $row['propertyvalue'];
-			}
-
-			$this->property_cache[self::GETETAG_PROPERTYNAME] = '"' . $this->info->getEtag() . '"';
-		}
-
-		// if the array was empty, we need to return everything
-		if (count($properties) == 0) {
-			return $this->property_cache;
-		}
-
-		$props = array();
-		foreach ($properties as $property) {
-			if (isset($this->property_cache[$property])) {
-				$props[$property] = $this->property_cache[$property];
-			}
-		}
-
-		return $props;
 	}
 
 	/**
