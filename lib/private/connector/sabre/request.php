@@ -1,5 +1,7 @@
 <?php
 
+namespace OC\Connector\Sabre;
+
 /**
  * ownCloud
  *
@@ -21,14 +23,14 @@
  *
  */
 
-class OC_Connector_Sabre_Request extends \Sabre\HTTP\Request {
+class Request extends \Sabre\HTTP\Request {
 	/**
 	 * Returns the requested uri
 	 *
 	 * @return string
 	 */
 	public function getUri() {
-		return OC_Request::requestUri();
+		return \OC_Request::requestUri();
 	}
 
 	/**

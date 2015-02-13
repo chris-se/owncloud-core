@@ -25,8 +25,8 @@
 
 // Backends
 $authBackend = new \OC\Connector\Sabre\Auth();
-$lockBackend = new OC_Connector_Sabre_Locks();
-//$requestBackend = new OC_Connector_Sabre_Request();
+$lockBackend = new \OC\Connector\Sabre\Locks();
+//$requestBackend = new \OC\Connector\Sabre\Request();
 
 // Fire up server
 $objectTree = new \OC\Connector\Sabre\ObjectTree();
@@ -41,8 +41,8 @@ $server->addPlugin(new \Sabre\DAV\Auth\Plugin($authBackend, $defaults->getName()
 $server->addPlugin(new \Sabre\DAV\Locks\Plugin($lockBackend));
 $server->addPlugin(new \Sabre\DAV\Browser\Plugin(false, false)); // Show something in the Browser, but no upload
 $server->addPlugin(new \OC\Connector\Sabre\FilesPlugin($objectTree));
-$server->addPlugin(new OC_Connector_Sabre_MaintenancePlugin());
-$server->addPlugin(new OC_Connector_Sabre_ExceptionLoggerPlugin('webdav'));
+$server->addPlugin(new \OC\Connector\Sabre\MaintenancePlugin());
+$server->addPlugin(new \OC\Connector\Sabre\ExceptionLoggerPlugin('webdav'));
 
 // wait with registering these until auth is handled and the filesystem is setup
 $server->on('beforeMethod', function () use ($server, $objectTree) {

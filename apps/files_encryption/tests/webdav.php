@@ -217,8 +217,8 @@ class Webdav extends TestCase {
 			->method('validateUserPass')
 			->will($this->returnValue(true));
 
-		$lockBackend = new \OC_Connector_Sabre_Locks();
-		$requestBackend = new \OC_Connector_Sabre_Request();
+		$lockBackend = new \OC\Connector\Sabre\Locks();
+		$requestBackend = new \OC\Connector\Sabre\Request();
 
 		// Create ownCloud Dir
 		$root = '/' . $this->userId . '/files';
@@ -238,7 +238,7 @@ class Webdav extends TestCase {
 		$server->addPlugin(new \Sabre\DAV\Locks\Plugin($lockBackend));
 		$server->addPlugin(new \Sabre\DAV\Browser\Plugin(false)); // Show something in the Browser, but no upload
 		$server->addPlugin(new \OC\Connector\Sabre\QuotaPlugin($view));
-		$server->addPlugin(new \OC_Connector_Sabre_MaintenancePlugin());
+		$server->addPlugin(new \OC\Connector\Sabre\MaintenancePlugin());
 		$server->debugExceptions = true;
 
 		// Totally ugly hack to setup the FS
