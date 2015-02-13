@@ -140,17 +140,18 @@ class Test_OC_Connector_Sabre_Directory extends \Test\TestCase {
 		// does not call getDirectoryContents again
 		$nodes = $dir->getChildren();
 
-		$properties = array('testprop', \OC\Connector\Sabre\Node::GETETAG_PROPERTYNAME);
+		$etagPropName = \OC\Connector\Sabre\FilesPlugin::GETETAG_PROPERTYNAME;
+		$properties = array('testprop', $etagPropName);
 		$this->assertEquals(2, count($nodes));
 		$this->assertEquals(
 			array(
-				\OC\Connector\Sabre\Node::GETETAG_PROPERTYNAME => '"abc"'
+				$etagPropName => '"abc"'
 			),
 			$nodes[0]->getProperties($properties)
 		);
 		$this->assertEquals(
 			array(
-				\OC\Connector\Sabre\Node::GETETAG_PROPERTYNAME => '"def"'
+				$etagPropName => '"def"'
 			),
 			$nodes[1]->getProperties($properties)
 		);
