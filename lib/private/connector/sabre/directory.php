@@ -151,42 +151,9 @@ class Directory extends \OC\Connector\Sabre\Node
 		}
 		$folderContent = $this->fileView->getDirectoryContent($this->path);
 
-		$properties = array();
-		$paths = array();
-		foreach($folderContent as $info) {
-			$name = $info->getName();
-			$paths[] = $this->path . '/' . $name;
-			$properties[$this->path.'/' . $name][self::GETETAG_PROPERTYNAME] = '"' . $info->getEtag() . '"';
-		}
-		// TODO: move this to a beforeGetPropertiesForPath event to pre-cache properties
-		// TODO: only fetch the requested properties
-		if(count($paths)>0) {
-			//
-			// the number of arguments within IN conditions are limited in most databases
-			// we chunk $paths into arrays of 200 items each to meet this criteria
-			//
-			$chunks = array_chunk($paths, 200, false);
-			foreach ($chunks as $pack) {
-				$placeholders = join(',', array_fill(0, count($pack), '?'));
-				$query = \OC_DB::prepare( 'SELECT * FROM `*PREFIX*properties`'
-					.' WHERE `userid` = ?' . ' AND `propertypath` IN ('.$placeholders.')' );
-				array_unshift($pack, \OC_User::getUser()); // prepend userid
-				$result = $query->execute( $pack );
-				while($row = $result->fetchRow()) {
-					$propertypath = $row['propertypath'];
-					$propertyname = $row['propertyname'];
-					$propertyvalue = $row['propertyvalue'];
-					if($propertyname !== self::GETETAG_PROPERTYNAME) {
-						$properties[$propertypath][$propertyname] = $propertyvalue;
-					}
-				}
-			}
-		}
-
 		$nodes = array();
 		foreach($folderContent as $info) {
 			$node = $this->getChild($info->getName(), $info);
-			$node->setPropertyCache($properties[$this->path . '/' . $info->getName()]);
 			$nodes[] = $node;
 		}
 		$this->dirContent = $nodes;
@@ -242,34 +209,6 @@ class Directory extends \OC\Connector\Sabre\Node
 		catch (\OCP\Files\StorageNotAvailableException $e) {
 			return array(0, 0);
 		}
-	}
-
-	/**
-	 * Returns a list of properties for this nodes.;
-	 *
-	 * The properties list is a list of propertynames the client requested,
-	 * encoded as xmlnamespace#tagName, for example:
-	 * http://www.example.org/namespace#author
-	 * If the array is empty, all properties should be returned
-	 *
-	 * @param array $properties
-	 * @return array
-	 */
-	public function getProperties($properties) {
-		$props = parent::getProperties($properties);
-		if (in_array(self::GETETAG_PROPERTYNAME, $properties) && !isset($props[self::GETETAG_PROPERTYNAME])) {
-			$props[self::GETETAG_PROPERTYNAME] = $this->info->getEtag();
-		}
-		return $props;
-	}
-
-	/**
-	 * Returns the size of the node, in bytes
-	 *
-	 * @return int
-	 */
-	public function getSize() {
-		return $this->info->getSize();
 	}
 
 }

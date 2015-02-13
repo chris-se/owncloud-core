@@ -109,8 +109,8 @@ class CustomPropertiesBackend implements \Sabre\DAV\PropertyStorage\Backend\Back
 			return;
 		}
 
-		$propPatch->handleRemaining(function($changedProps) {
-			$this->updateProperties($node, $changedProps);
+		$propPatch->handleRemaining(function($changedProps) use ($node) {
+			return $this->updateProperties($node, $changedProps);
 		});
 	}
 
@@ -211,7 +211,7 @@ class CustomPropertiesBackend implements \Sabre\DAV\PropertyStorage\Backend\Back
 	 * @param \OC\Connector\Sabre\Node $node node for which to update properties
 	 * @param array $properties array of properties to update
 	 *
-	 * @return void
+	 * @return bool
 	 */
 	public function updateProperties($node, $properties) {
 		$path = $node->getPath();
@@ -274,6 +274,8 @@ class CustomPropertiesBackend implements \Sabre\DAV\PropertyStorage\Backend\Back
 
 		$this->connection->commit();
 		unset($this->cache[$path]);
+
+		return true;
 	}
 
 }

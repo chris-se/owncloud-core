@@ -24,6 +24,7 @@ class FilesPlugin extends \Sabre\DAV\ServerPlugin
 	const PERMISSIONS_PROPERTYNAME = '{http://owncloud.org/ns}permissions';
 	const DOWNLOADURL_PROPERTYNAME = '{http://owncloud.org/ns}downloadURL';
 	const SIZE_PROPERTYNAME = '{http://owncloud.org/ns}size';
+	const GETETAG_PROPERTYNAME = '{DAV:}getetag';
 
 	/**
 	 * Reference to main server object
@@ -73,9 +74,12 @@ class FilesPlugin extends \Sabre\DAV\ServerPlugin
 				return $node->getFileId();
 			});
 
-			/** @var $node \OC\Connector\Sabre\Node */
 			$propFind->handle(self::PERMISSIONS_PROPERTYNAME, function() use ($node) {
 				return $node->getDavPermissions();
+			});
+
+			$propFind->handle(self::GETETAG_PROPERTYNAME, function() use ($node) {
+				return $node->getEtag();
 			});
 		}
 

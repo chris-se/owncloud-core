@@ -25,8 +25,6 @@ use OC\Connector\Sabre\TagList;
  *
  */
 abstract class Node implements \Sabre\DAV\INode {
-	const GETETAG_PROPERTYNAME = '{DAV:}getetag';
-
 	/**
 	 * Allow configuring the method used to generate Etags
 	 *
@@ -143,6 +141,30 @@ abstract class Node implements \Sabre\DAV\INode {
 	public function touch($mtime) {
 		$this->fileView->touch($this->path, $mtime);
 		$this->refreshInfo();
+	}
+
+	/**
+	 * Returns the ETag for a file
+	 *
+	 * An ETag is a unique identifier representing the current version of the
+	 * file. If the file changes, the ETag MUST change.  The ETag is an
+	 * arbitrary string, but MUST be surrounded by double-quotes.
+	 *
+	 * Return null if the ETag can not effectively be determined
+	 *
+	 * @return mixed
+	 */
+	public function getETag() {
+		return '"' . $this->info->getEtag() . '"';
+	}
+
+	/**
+	 * Returns the size of the node, in bytes
+	 *
+	 * @return int|float
+	 */
+	public function getSize() {
+		return $this->info->getSize();
 	}
 
 	/**
