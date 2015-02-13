@@ -76,11 +76,16 @@ class CustomPropertiesBackend implements \Sabre\DAV\PropertyStorage\Backend\Back
 			return;
 		}
 
-		// TODO: pre-cache when $depth > 0
-
 		$requestedProps = $propFind->get404Properties();
 		if (empty($requestedProps)) {
 			return;
+		}
+
+		if ($node instanceof \OC\Connector\Sabre\Directory
+			&& $propFind->getDepth() === 1
+		) {
+			// note: pre-fetching only supported for depth <= 1
+			$this->loadChildrenProperties($node, $requestedProps);
 		}
 
 		$props = $this->getProperties($node, $requestedProps);
@@ -123,7 +128,7 @@ class CustomPropertiesBackend implements \Sabre\DAV\PropertyStorage\Backend\Back
 		$statement = $this->connection->prepare(
 			'DELETE FROM `*PREFIX*properties` WHERE `userid` = ? AND `propertypath` = ?'
 		);
-		$statement->execute(array(\OC_User::getUser(), $path));
+		$statement->execute(array(\OC_User::getUser(), '/' . $path));
 		$statement->closeCursor();
 
 		unset($this->cache[$path]);
@@ -155,7 +160,7 @@ class CustomPropertiesBackend implements \Sabre\DAV\PropertyStorage\Backend\Back
 			'UPDATE `*PREFIX*properties` SET `propertypath` = ?' .
 			' WHERE `userid` = ? AND `propertypath` = ?'
 		);
-		$statement->execute(array($destination, \OC_User::getUser(), $source));
+		$statement->execute(array('/' . $destination, \OC_User::getUser(), '/' . $source));
 		$statement->closeCursor();
 	}
 
@@ -276,6 +281,53 @@ class CustomPropertiesBackend implements \Sabre\DAV\PropertyStorage\Backend\Back
 		unset($this->cache[$path]);
 
 		return true;
+	}
+
+	/**
+	 * Bulk load properties for directory children
+	 *
+	 * @param \OC\Connector\Sabre\Directory $node
+	 * @param array $requestedProperties requested properties
+	 *
+	 * @return void
+	 */
+	private function loadChildrenProperties(\OC\Connector\Sabre\Directory $node, $requestedProperties) {
+		$path = $node->getPath();
+		if (isset($this->cache[$path])) {
+			// we already loaded them at some point
+			return;
+		}
+
+		$sql = 'SELECT * FROM `*PREFIX*properties` WHERE `userid` = ? AND `propertypath` LIKE ?';
+		$sql .= ' AND `propertyname` in (?) ORDER BY `propertypath`, `propertyname`';
+
+		$result = $this->connection->executeQuery(
+			$sql,
+			array($this->user, rtrim($path, '/') . '/%', $requestedProperties),
+			array(null, null, \Doctrine\DBAL\Connection::PARAM_STR_ARRAY)
+		);
+
+		$props = [];
+		$oldPath = null;
+		$props = [];
+		while ($row = $result->fetch()) {
+			$path = $row['propertypath'];
+			if ($oldPath !== $path) {
+				// save previously gathered props
+				$this->cache[$oldPath] = $props;
+				$oldPath = $path;
+				// prepare props for next path
+				$props = [];
+			}
+			$props[$row['propertyname']] = $row['propertyvalue'];
+		}
+		if (!is_null($oldPath)) {
+			// save props from last run
+			$this->cache[$oldPath] = $props;
+		}
+
+		$result->closeCursor();
+
 	}
 
 }
