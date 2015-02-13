@@ -214,16 +214,15 @@ class TagsPlugin extends \Sabre\DAV\ServerPlugin
 
 		$tags = null;
 		$isFav = null;
-		$self = $this;
 
-		$propFind->handle(self::TAGS_PROPERTYNAME, function() use ($self, $tags, $isFav, $node) {
-			list($tags, $isFav) = $self->getTagsAndFav($node->getId());
+		$propFind->handle(self::TAGS_PROPERTYNAME, function() use ($tags, $isFav, $node) {
+			list($tags, $isFav) = $this->getTagsAndFav($node->getId());
 			return new TagList($tags);
 		});
 
-		$propFind->handle(self::FAVORITE_PROPERTYNAME, function() use ($self, $isFav, $node) {
+		$propFind->handle(self::FAVORITE_PROPERTYNAME, function() use ($isFav, $node) {
 			if (is_null($isFav)) {
-				list(, $isFav) = $self->getTagsAndFav($node->getId());
+				list(, $isFav) = $this->getTagsAndFav($node->getId());
 			}
 			return $isFav;
 		});
@@ -237,20 +236,18 @@ class TagsPlugin extends \Sabre\DAV\ServerPlugin
 	 * @return void
 	 */
 	public function handleUpdateProperties($path, PropPatch $propPatch) {
-		$self = $this;
-
-		$propPatch->handle(self::TAGS_PROPERTYNAME, function($tagList) use ($self, $path) {
-			$node = $self->tree->getNodeForPath($path);
-			$self->updateTags($node->getId(), $tagList->getTags());
+		$propPatch->handle(self::TAGS_PROPERTYNAME, function($tagList) use ($path) {
+			$node = $this->tree->getNodeForPath($path);
+			$this->updateTags($node->getId(), $tagList->getTags());
 			return true;
 		});
 
-		$propPatch->handle(self::FAVORITE_PROPERTYNAME, function($favState) use ($self, $path) {
-			$node = $self->tree->getNodeForPath($path);
+		$propPatch->handle(self::FAVORITE_PROPERTYNAME, function($favState) use ($path) {
+			$node = $this->tree->getNodeForPath($path);
 			if ((int)$favState === 1 || $favState === 'true') {
-				$self->getTagger()->tagAs($node->getId(), self::TAG_FAVORITE);
+				$this->getTagger()->tagAs($node->getId(), self::TAG_FAVORITE);
 			} else {
-				$self->getTagger()->unTag($node->getId(), self::TAG_FAVORITE);
+				$this->getTagger()->unTag($node->getId(), self::TAG_FAVORITE);
 			}
 			return 200;
 		});
