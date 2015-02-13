@@ -97,12 +97,6 @@ class CustomPropertiesBackend implements \Sabre\DAV\PropertyStorage\Backend\Back
     /**
      * Updates properties for a path
      *
-     * This method received a PropPatch object, which contains all the
-     * information about the update.
-     *
-     * Usually you would want to call 'handleRemaining' on this object, to get;
-     * a list of all properties that need to be stored.
-     *
      * @param string $path
      * @param PropPatch $propPatch
 	 *
@@ -128,7 +122,7 @@ class CustomPropertiesBackend implements \Sabre\DAV\PropertyStorage\Backend\Back
 		$statement = $this->connection->prepare(
 			'DELETE FROM `*PREFIX*properties` WHERE `userid` = ? AND `propertypath` = ?'
 		);
-		$statement->execute(array(\OC_User::getUser(), '/' . $path));
+		$statement->execute(array($this->user, '/' . $path));
 		$statement->closeCursor();
 
 		unset($this->cache[$path]);
@@ -137,30 +131,17 @@ class CustomPropertiesBackend implements \Sabre\DAV\PropertyStorage\Backend\Back
     /**
      * This method is called after a successful MOVE
      *
-     * This should be used to migrate all properties from one path to another.
-     * Note that entire collections may be moved, so ensure that all properties
-     * for children are also moved along.
-     *
      * @param string $source
      * @param string $destination
 	 *
      * @return void
      */
 	public function move($source, $destination) {
-		$nodeSource = $this->tree->getNodeForPath($source);
-		$nodeDest = $this->tree->getNodeForPath($destination);
-		if (!($nodeSource instanceof \OC\Connector\Sabre\Node)) {
-			return;
-		}
-		if (!($nodeDest instanceof \OC\Connector\Sabre\Node)) {
-			return;
-		}
-
 		$statement = $this->connection->prepare(
 			'UPDATE `*PREFIX*properties` SET `propertypath` = ?' .
 			' WHERE `userid` = ? AND `propertypath` = ?'
 		);
-		$statement->execute(array('/' . $destination, \OC_User::getUser(), '/' . $source));
+		$statement->execute(array('/' . $destination, $this->user, '/' . $source));
 		$statement->closeCursor();
 	}
 
@@ -245,7 +226,7 @@ class CustomPropertiesBackend implements \Sabre\DAV\PropertyStorage\Backend\Back
 				if (array_key_exists($propertyName, $existing)) {
 					$deleteStatement->execute(
 						array(
-							\OC_User::getUser(),
+							$this->user,
 							$path,
 							$propertyName
 						)
@@ -256,7 +237,7 @@ class CustomPropertiesBackend implements \Sabre\DAV\PropertyStorage\Backend\Back
 				if (!array_key_exists($propertyName, $existing)) {
 					$insertStatement->execute(
 						array(
-							\OC_User::getUser(),
+							$this->user,
 							$path,
 							$propertyName,
 							$propertyValue
@@ -267,7 +248,7 @@ class CustomPropertiesBackend implements \Sabre\DAV\PropertyStorage\Backend\Back
 					$updateStatement->execute(
 						array(
 							$propertyValue,
-							\OC_User::getUser(),
+							$this->user,
 							$path,
 							$propertyName
 						)
