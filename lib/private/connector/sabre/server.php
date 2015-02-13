@@ -40,10 +40,6 @@ class Server extends \Sabre\DAV\Server {
 		parent::__construct($treeOrNode);
 		self::$exposeVersion = false;
 		$this->enablePropfindDepthInfinity = true;
-
-		// normally these cannot be changed (RFC4918), but we want them modifiable through PROPPATCH
-		$allowedProperties = ['{DAV:}getetag', '{DAV:}getlastmodified'];
-		$this->protectedProperties = array_diff($this->protectedProperties, $allowedProperties);
 	}
 
 	public function getRequestUri() {

@@ -62,6 +62,10 @@ class FilesPlugin extends \Sabre\DAV\ServerPlugin
 		$server->protectedProperties[] = self::SIZE_PROPERTYNAME;
 		$server->protectedProperties[] = self::DOWNLOADURL_PROPERTYNAME;
 
+		// normally these cannot be changed (RFC4918), but we want them modifiable through PROPPATCH
+		$allowedProperties = ['{DAV:}getetag', '{DAV:}getlastmodified'];
+		$server->protectedProperties = array_diff($server->protectedProperties, $allowedProperties);
+
 		$this->server = $server;
 		$this->server->on('propFind', array($this, 'handleGetProperties'));
 		$this->server->on('propPatch', array($this, 'handleUpdateProperties'));
