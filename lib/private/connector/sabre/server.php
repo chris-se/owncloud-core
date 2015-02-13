@@ -40,9 +40,6 @@ class Server extends \Sabre\DAV\Server {
 		parent::__construct($treeOrNode);
 		self::$exposeVersion = false;
 		$this->enablePropfindDepthInfinity = true;
-
-		// TODO: move these to a plugin
-        $this->on('method:GET', [$this, 'httpGet']);
 	}
 
 	public function getRequestUri() {
@@ -71,20 +68,4 @@ class Server extends \Sabre\DAV\Server {
 		return $result;
 	}
 
-	public function getHTTPRange() {
-		if ($this->ignoreRangeHeader) {
-			return null;
-		}
-		return parent::getHTTPRange();
-	}
-
-	protected function httpGet($uri) {
-		$range = $this->getHTTPRange();
-
-		if (\OC_App::isEnabled('files_encryption') && $range) {
-			// encryption does not support range requests (yet)
-			$this->ignoreRangeHeader = true;	
-		}
-		return parent::httpGet($uri);
-	}
 }

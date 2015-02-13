@@ -12,6 +12,8 @@ namespace OC\Connector\Sabre;
 
 use \Sabre\DAV\PropFind;
 use \Sabre\DAV\PropPatch;
+use \Sabre\HTTP\RequestInterface;
+use \Sabre\HTTP\ResponseInterface;
 
 class FilesPlugin extends \Sabre\DAV\ServerPlugin
 {
@@ -44,15 +46,16 @@ class FilesPlugin extends \Sabre\DAV\ServerPlugin
 	public function initialize(\Sabre\DAV\Server $server) {
 
 		$server->xmlNamespaces[self::NS_OWNCLOUD] = 'oc';
-		$server->protectedProperties[] = FILEID_PROPERTYNAME;
-		$server->protectedProperties[] = PERMISSIONS_PROPERTYNAME;
-		$server->protectedProperties[] = SIZE_PROPERTYNAME;
-		$server->protectedProperties[] = DOWNLOADURL_PROPERTYNAME;
+		$server->protectedProperties[] = self::FILEID_PROPERTYNAME;
+		$server->protectedProperties[] = self::PERMISSIONS_PROPERTYNAME;
+		$server->protectedProperties[] = self::SIZE_PROPERTYNAME;
+		$server->protectedProperties[] = self::DOWNLOADURL_PROPERTYNAME;
 
 		$this->server = $server;
 		$this->server->on('propFind', array($this, 'handleGetProperties'));
 		$this->server->on('afterBind', array($this, 'sendFileIdHeader'));
 		$this->server->on('afterWriteContent', array($this, 'sendFileIdHeader'));
+		$this->server->on('beforeMethod:GET', array($this, 'handleRangeHeaders'));
 	}
 
 	/**
@@ -119,6 +122,19 @@ class FilesPlugin extends \Sabre\DAV\ServerPlugin
 			if (!is_null($fileId)) {
 				$this->server->httpResponse->setHeader('OC-FileId', $fileId);
 			}
+		}
+	}
+
+	/**
+	 * Remove range headers if encryption is enabled.
+	 *
+	 * @param RequestInterface $request
+	 * @param ResponseInterface $response
+	 */
+	public function handleRangeHeaders(RequestInterface $request, ResponseInterface $response) {
+		if (\OC_App::isEnabled('files_encryption')) {
+			// encryption does not support range requests (yet)
+			$request->removeHeader('range');
 		}
 	}
 
