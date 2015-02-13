@@ -25,6 +25,7 @@ class FilesPlugin extends \Sabre\DAV\ServerPlugin
 	const DOWNLOADURL_PROPERTYNAME = '{http://owncloud.org/ns}downloadURL';
 	const SIZE_PROPERTYNAME = '{http://owncloud.org/ns}size';
 	const GETETAG_PROPERTYNAME = '{DAV:}getetag';
+	const GETLASTMODIFIED_PROPERTYNAME = '{DAV:}getlastmodified';
 
 	/**
 	 * Reference to main server object
@@ -32,6 +33,15 @@ class FilesPlugin extends \Sabre\DAV\ServerPlugin
 	 * @var \Sabre\DAV\Server
 	 */
 	private $server;
+
+	/**
+	 * @var \Sabre\DAV\Tree
+	 */
+	private $tree;
+
+	public function __construct(\Sabre\DAV\Tree $tree) {
+		$this->tree = $tree;
+	}
 
 	/**
 	 * This initializes the plugin.
@@ -54,6 +64,7 @@ class FilesPlugin extends \Sabre\DAV\ServerPlugin
 
 		$this->server = $server;
 		$this->server->on('propFind', array($this, 'handleGetProperties'));
+		$this->server->on('propPatch', array($this, 'handleUpdateProperties'));
 		$this->server->on('afterBind', array($this, 'sendFileIdHeader'));
 		$this->server->on('afterWriteContent', array($this, 'sendFileIdHeader'));
 		$this->server->on('beforeMethod:GET', array($this, 'handleRangeHeaders'));
@@ -99,6 +110,32 @@ class FilesPlugin extends \Sabre\DAV\ServerPlugin
 				return $node->getSize();
 			});
 		}
+	}
+
+	/**
+	 * Update ownCloud-specific properties
+	 *
+	 * @param string $path
+	 * @param PropPatch $propPatch
+	 *
+	 * @return void
+	 */
+	public function handleUpdateProperties($path, PropPatch $propPatch) {
+		$propPatch->handle(self::GETLASTMODIFIED_PROPERTYNAME, function($time) use ($path) {
+			if (empty($time)) {
+				return false;
+			}
+			$node = $this->tree->getNodeForPath($path);
+			$node->touch($time);
+			return true;
+		});
+		$propPatch->handle(self::GETETAG_PROPERTYNAME, function($etag) use ($path) {
+			if (empty($etag)) {
+				return false;
+			}
+			\OC\Files\Filesystem::putFileInfo($path, array('etag' => $etag));
+			return true;
+		});
 	}
 
 	/**

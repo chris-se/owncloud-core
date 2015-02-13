@@ -231,8 +231,9 @@ class TagsPlugin extends \Sabre\DAV\ServerPlugin
 	/**
 	 * Updates tags and favorites properties, if applicable.
 	 *
+	 * @param string $path
 	 * @param PropPatch $propPatch
-	 * @param \Sabre\DAV\INode $node
+	 *
 	 * @return void
 	 */
 	public function handleUpdateProperties($path, PropPatch $propPatch) {
@@ -249,6 +250,12 @@ class TagsPlugin extends \Sabre\DAV\ServerPlugin
 			} else {
 				$this->getTagger()->unTag($node->getId(), self::TAG_FAVORITE);
 			}
+
+			if (is_null($favState)) {
+				// confirm deletion
+				return 204;
+			}
+
 			return 200;
 		});
 	}
