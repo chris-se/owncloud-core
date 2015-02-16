@@ -26,13 +26,12 @@
 // Backends
 $authBackend = new \OC\Connector\Sabre\Auth();
 $lockBackend = new \OC\Connector\Sabre\Locks();
-//$requestBackend = new \OC\Connector\Sabre\Request();
 
 // Fire up server
 $objectTree = new \OC\Connector\Sabre\ObjectTree();
 $server = new \OC\Connector\Sabre\Server($objectTree);
-// FIXME use another approach ?
-// $server->httpRequest = $requestBackend;
+// Set URL explicitly due to reverse-proxy situations
+$server->httpRequest->setUrl(\OC_Request::requestUri());
 $server->setBaseUri($baseuri);
 
 // Load plugins

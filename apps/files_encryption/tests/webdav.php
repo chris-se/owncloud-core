@@ -218,7 +218,6 @@ class Webdav extends TestCase {
 			->will($this->returnValue(true));
 
 		$lockBackend = new \OC\Connector\Sabre\Locks();
-		$requestBackend = new \OC\Connector\Sabre\Request();
 
 		// Create ownCloud Dir
 		$root = '/' . $this->userId . '/files';
@@ -230,7 +229,6 @@ class Webdav extends TestCase {
 
 		// Fire up server
 		$server = new \Sabre\DAV\Server($publicDir);
-		$server->httpRequest = $requestBackend;
 		$server->setBaseUri('/remote.php/webdav/');
 
 		// Load plugins
